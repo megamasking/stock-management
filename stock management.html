@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stock Management Software</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f4f4f4;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        .container {
+            width: 80%;
+            margin: auto;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            padding: 10px;
+            text-align: center;
+            border: 1px solid #ddd;
+        }
+        th {
+            background-color: #4CAF50;
+            color: white;
+        }
+        input[type="text"], input[type="number"], button {
+            padding: 10px;
+            margin: 5px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .actions button {
+            background-color: #f44336;
+            margin-left: 10px;
+        }
+        .actions button:hover {
+            background-color: #da190b;
+        }
+        .sales-btn {
+            background-color: #ff9800;
+        }
+        .sales-btn:hover {
+            background-color: #e68900;
+        }
+        .sell-quantity {
+            width: 60px;
+            margin-left: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Stock Management Software</h1>
+
+    <div class="container">
+        <h2>Add New Item</h2>
+        <form id="stock-form">
+            <input type="text" id="product-name" placeholder="Product Name" required>
+            <input type="number" id="product-quantity" placeholder="Quantity" required min="1">
+            <button type="submit">Add Item</button>
+        </form>
+
+        <h2>Stock Inventory</h2>
+        <table id="stock-table">
+            <thead>
+                <tr>
+                    <th>Product Name</th>
+                    <th>Quantity</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Stock items will appear here -->
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        // Function to load stock data from localStorage
+        function loadStockData() {
+            const stockData = JSON.parse(localStorage.getItem('stockData')) || [];
+            const tableBody = document.getElementById('stock-table').getElementsByTagName('tbody')[0];
+
+            stockData.forEach(item => {
+                const newRow = tableBody.insertRow();
+
+                const cell1 = newRow.insertCell(0);
+                const cell2 = newRow.insertCell(1);
+                const cell3 = newRow.insertCell(2);
+
+                cell1.textContent = item.name;
+                cell2.textContent = item.quantity;
+
+                const actionsCell = document.createElement('div');
+                actionsCell.classList.add('actions');
+
+                const deleteButton = document.createElement('button');
+                deleteButton.textContent = 'Delete';
+                deleteButton.onclick = function() {
+                    deleteItem(item.name);
+                };
+                actionsCell.appendChild(deleteButton);
+
+                const editButton = document.createElement('button');
+                editButton.textContent = 'Edit';
+                editButton.onclick = function() {
+                    editItem(item.name, item.quantity);
+                };
+                actionsCell.appendChild(editButton);
+
+                const salesInput = document.createElement('input');
+                salesInput.type = 'number';
+                salesInput.classList.add('sell-quantity');
+                salesInput.placeholder = 'Quantity to sell';
+                salesInput.min = 1;
+
+                const salesButton = document.createElement('button');
+                salesButton.textContent = 'Sell Item';
+                salesButton.classList.add('sales-btn');
+                salesButton.onclick = function() {
+                    const quantityToSell = parseInt(salesInput.value);
+                    if (quantityToSell > 0 && quantityToSell <= item.quantity) {
+                        item.quantity -= quantityToSell;
+                        cell2.textContent = item.quantity;
+                        saveStockData();
+                    } else {
+                        alert("Invalid quantity or insufficient stock.");
+                    }
+                    salesInput.value = ''; // Clear the input field
+                };
+
+                actionsCell.appendChild(salesInput);
+                actionsCell.appendChild(salesButton);
+
+                cell3.appendChild(actionsCell);
+            });
+        }
+
+        // Save stock data to localStorage
+        function saveStockData() {
+            const stockData = [];
+            const rows = document.getElementById('stock-table').getElementsByTagName('tbody')[0].rows;
+            for (let row of rows) {
+                const productName = row.cells[0].textContent;
+                const quantity = parseInt(row.cells[1].textContent);
+                stockData.push({ name: productName, quantity: quantity });
+            }
+            localStorage.setItem('stockData', JSON.stringify(stockData));
+        }
+
+        // Function to add a new stock item
+        document.getElementById('stock-form').addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            const productName = document.getElementById('product-name').value;
+            const productQuantity = document.getElementById('product-quantity').value;
+
+            const tableBody = document.getElementById('stock-table').getElementsByTagName('tbody')[0];
+
+            const newRow = tableBody.insertRow();
+
+            const cell1 = newRow.insertCell(0);
+            const cell2 = newRow.insertCell(1);
+            const cell3 = newRow.insertCell(2);
+
+            cell1.textContent = productName;
+            cell2.textContent = productQuantity;
+
+            const actionsCell = document.createElement('div');
+            actionsCell.classList.add('actions');
+
+            const deleteButton = document.createElement('button');
+            deleteButton.textContent = 'Delete';
+            deleteButton.onclick = function() {
+                deleteItem(productName);
+            };
+            actionsCell.appendChild(deleteButton);
+
+            const editButton = document.createElement('button');
+            editButton.textContent = 'Edit';
+            editButton.onclick = function() {
+                editItem(productName, productQuantity);
+            };
+            actionsCell.appendChild(editButton);
+
+            const salesInput = document.createElement('input');
+            salesInput.type = 'number';
+            salesInput.classList.add('sell-quantity');
+            salesInput.placeholder = 'Quantity to sell';
+            salesInput.min = 1;
+
+            const salesButton = document.createElement('button');
+            salesButton.textContent = 'Sell Item';
+            salesButton.classList.add('sales-btn');
+            salesButton.onclick = function() {
+                const quantityToSell = parseInt(salesInput.value);
+                const currentQuantity = parseInt(cell2.textContent);
+                if (quantityToSell > 0 && quantityToSell <= currentQuantity) {
+                    cell2.textContent = currentQuantity - quantityToSell; // Subtract the quantity
+                    saveStockData(); // Save updated data to localStorage
+                } else {
+                    alert("Invalid quantity or insufficient stock.");
+                }
+                salesInput.value = ''; // Clear the sales input field
+            };
+
+            actionsCell.appendChild(salesInput);
+            actionsCell.appendChild(salesButton);
+
+            cell3.appendChild(actionsCell);
+
+            // Clear input fields after adding
+            document.getElementById('product-name').value = '';
+            document.getElementById('product-quantity').value = '';
+
+            // Save the new item to localStorage
+            saveStockData();
+        });
+
+        // Function to delete an item
+        function deleteItem(productName) {
+            const rows = document.getElementById('stock-table').getElementsByTagName('tbody')[0].rows;
+            for (let row of rows) {
+                if (row.cells[0].textContent === productName) {
+                    row.remove();
+                    break;
+                }
+            }
+            saveStockData(); // Save after deletion
+        }
+
+        // Function to edit an item
+        function editItem(productName, productQuantity) {
+            document.getElementById('product-name').value = productName;
+            document.getElementById('product-quantity').value = productQuantity;
+
+            deleteItem(productName); // Remove the old item before adding the updated one
+        }
+
+        // Load data when the page loads
+        window.onload = loadStockData;
+    </script>
+</body>
+</html>
